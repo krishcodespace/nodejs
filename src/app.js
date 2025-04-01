@@ -40,10 +40,8 @@ app.get("/user", async (req, res) => {
 
 app.get("/getuser", async (req, res) => {
   const userId = req.query.userId;
-  console.log("userID", req.query);
   try {
     const users = await User.find({ _id: userId });
-    console.log(users);
     // const users = await User.findOne({ emailId: userEmail }); // incase two use with same emailid it will give you first one 
     if (users.length > 0) {
       res.status(200).send(users);
@@ -98,10 +96,14 @@ app.patch("/update", async(req, res) => {
  const userData = req.body;
 
  try {
-  const upateUser = await User.findByIdAndUpdate({ _id : userId}, userData);
+  const updateUser = await User.findByIdAndUpdate({ _id : userId}, userData, {
+    return : after,
+    runValidators: true, // apply validation on while update the data
+  });
+  console.log(updateUser);
   res.send("User update successfully!") 
  } catch (error) {
-  res.status(500).send("something went wrong!");
+  res.status(500).send("something went wrong!" + error);
  }
 })
 
