@@ -1,6 +1,6 @@
 => Routing
-- order of routes is matter
 
+- order of routes is matter
 
 Create a repository
 
@@ -40,9 +40,9 @@ Install Postman app and make a workspace/collectio > test API call
 
 Write logic to handle GET, POST, PATCH, DELETE API Calls and test them on Postman
 
-Explore routing and use of ?, + , (), * in the routes
+Explore routing and use of ?, + , (), \* in the routes
 
-Use of regex in routes /a/ , /.*fly$/
+Use of regex in routes /a/ , /.\*fly$/
 
 Reading the query params in the routes
 
@@ -109,3 +109,9 @@ Explore the Mongoose Documention for Model methods
 What are options in a Model.findOneAndUpdate method, explore more about it
 
 API - Update the user with email ID
+
+Add timestamps to the userSchema
+
+Add API level validation on Patch request & Signup post api
+
+ DATA Sanitizing - Add API validation for each field

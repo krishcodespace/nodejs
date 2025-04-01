@@ -91,21 +91,31 @@ app.delete("/deleteuser", async (req, res) => {
 });
 
 //Update api - PATCH /updateuser
-app.patch("/update", async(req, res) => {
- const userId = req.body._id;
- const userData = req.body;
+app.patch("/update", async (req, res) => {
+  const userId = req.query?.userId;
+  const userData = req.body;
 
- try {
-  const updateUser = await User.findByIdAndUpdate({ _id : userId}, userData, {
-    return : after,
-    runValidators: true, // apply validation on while update the data
-  });
-  console.log(updateUser);
-  res.send("User update successfully!") 
- } catch (error) {
-  res.status(500).send("something went wrong!" + error);
- }
-})
+  try {
+    const ALLOWED_UPDATES = ["photoUrl", "about", "gender", "age", "skills"];
+    const isUpdateAllowed = Object.keys(userData).every((k) =>
+      ALLOWED_UPDATES.includes(k)
+    );
+    if (!isUpdateAllowed) {
+      throw new Error("Update not allowed");
+    }
+    if (userData?.skills.length > 10) {
+      throw new Error("Skills cannot be more than 10");
+    }
+    const updateUser = await User.findByIdAndUpdate({ _id: userId }, userData, {
+      returnDocument: "after",
+      runValidators: true, // apply validation on while update the data
+    });
+    console.log(updateUser);
+    res.send("User update successfully!");
+  } catch (error) {
+    res.status(500).send("something went wrong!" + error);
+  }
+});
 
 connectDB()
   .then(() => {
