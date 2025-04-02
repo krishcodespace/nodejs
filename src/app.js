@@ -1,21 +1,53 @@
 require("./config/database");
 const express = require("express");
 const app = express();
+const bcrypt = require("bcrypt");
 const connectDB = require("./config/database");
 const User = require("./models/user");
+const { signupValidation } = require("./utils/functions");
 
 app.use(express.json());
+
+//Login Api - POST/LOGIN
+app.post("/login", async (req, res, next) => {
+  try {
+  const { emailId, password } = req.body;
+    const isUserExist = await User.find({ emailId: emailId });
+    console.log("isUserExist", isUserExist);
+    if (!isUserExist) {
+      throw new Error("Inavlid credentials!");
+    }
+    const isValidPassword = await bcrypt.compare(password, isUserExist?.[0]?.password);
+
+    if (isValidPassword) {
+      res.send("Login successfully!");
+    } else {
+      throw new Error("Inavlid credentials");
+    }
+  } catch (err) {
+    res.status(400).send("Error saving user:" + err.message);
+  }
+});
 
 //ADD NEW USER - POST /signup
 app.post("/signup", async (req, res, next) => {
   // in most monggos functio is retun promise so we add async/await
-  const user = await new User(req.body);
   try {
-    const isUserExist = await User.find({ emailId : req.body.emailId});
-    if(isUserExist.length === 0){
+    const isUserExist = await User.find({ emailId: req.body.emailId });
+    if (isUserExist.length === 0) {
+      const sanitizeBody = signupValidation(req);
+      const { firstName, lastName, emailId, password } = sanitizeBody;
+      const passwordhash = await bcrypt.hash(password, 10);
+      console.log(passwordhash);
+      const user = await new User({
+        firstName,
+        lastName,
+        emailId,
+        password: passwordhash,
+      });
       await user.save();
       res.send("User Added successfully!");
-    }else{
+    } else {
       res.status(200).send("User Already exist with these email id!");
     }
   } catch (err) {
@@ -27,7 +59,7 @@ app.get("/user", async (req, res) => {
   const userEmail = req.body.emailId;
   try {
     const users = await User.find({ emailId: userEmail });
-    // const users = await User.findOne({ emailId: userEmail }); // incase two use with same emailid it will give you first one 
+    // const users = await User.findOne({ emailId: userEmail }); // incase two use with same emailid it will give you first one
     if (users.length === 0) {
       res.status(400).send("User not found");
     } else {
@@ -42,7 +74,7 @@ app.get("/getuser", async (req, res) => {
   const userId = req.query.userId;
   try {
     const users = await User.find({ _id: userId });
-    // const users = await User.findOne({ emailId: userEmail }); // incase two use with same emailid it will give you first one 
+    // const users = await User.findOne({ emailId: userEmail }); // incase two use with same emailid it will give you first one
     if (users.length > 0) {
       res.status(200).send(users);
     } else {
@@ -57,37 +89,36 @@ app.get("/getuser", async (req, res) => {
 app.get("/feed", async (req, res) => {
   try {
     const allUsers = await User.find({});
-      // res.status(200).send(allUsers);
-      res.send({
-        "data":allUsers,
-        "status":200,
-        "message":"you got users!",
-        "errorMessage": null
-      })
-
+    // res.status(200).send(allUsers);
+    res.send({
+      data: allUsers,
+      status: 200,
+      message: "you got users!",
+      errorMessage: null,
+    });
   } catch (error) {
     res.status(404).send("Something went wrong");
   }
 });
 
-//DELETe SPI - DELETE /deleteuser 
+//DELETe SPI - DELETE /deleteuser
 app.delete("/deleteuser", async (req, res) => {
-   const userId = req.query.userId;
-  console.log("userId",userId);
+  const userId = req.query.userId;
+  console.log("userId", userId);
 
-   try {
-      const isValidUserID = await User.find({_id: userId});
-      console.log(isValidUserID)
-      if(isValidUserID.length > 0 ){
-        const userdelete = await User.findByIdAndDelete({_id: userId});
-        // const userdelete = await User.findByIdAndDelete(userId);
-        res.send("user delete success fully!")
-      }else{
-        res.status(400).send("user not found with these id!")
-      }
-   } catch (error) {
+  try {
+    const isValidUserID = await User.find({ _id: userId });
+    console.log(isValidUserID);
+    if (isValidUserID.length > 0) {
+      const userdelete = await User.findByIdAndDelete({ _id: userId });
+      // const userdelete = await User.findByIdAndDelete(userId);
+      res.send("user delete success fully!");
+    } else {
+      res.status(400).send("user not found with these id!");
+    }
+  } catch (error) {
     res.status(400).send("Something went wrong!");
-   }
+  }
 });
 
 //Update api - PATCH /updateuser

@@ -1,4 +1,6 @@
 
+const validator = require('validator');
+
 const genderVal = (value) => {
     console.log("gender validation functon run succes fully")
     if(!["male","female","others"].includes(value)){
@@ -6,6 +8,18 @@ const genderVal = (value) => {
     }else{
         return value;
     }
-}
+} 
 
-module.exports = genderVal;
+const signupValidation = (req) => {
+  const { firstName, lastName, emailId, password } = req.body;
+     debugger;
+  if (!firstName || !lastName) {
+    throw new Error("Please Enter fristname & lastname");
+  } else if(!validator.isEmail(emailId)) {
+    throw new Error("Please Enter vaid email id.")
+  }else {
+    return req.body;
+  }
+};
+
+module.exports = {genderVal, signupValidation};
