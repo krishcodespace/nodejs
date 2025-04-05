@@ -2,24 +2,32 @@ require("./config/database");
 const express = require("express");
 const app = express();
 const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const connectDB = require("./config/database");
 const User = require("./models/user");
 const { signupValidation } = require("./utils/functions");
+const user = require("./models/user");
 
 app.use(express.json());
+app.use(cookieParser());
 
 //Login Api - POST/LOGIN
 app.post("/login", async (req, res, next) => {
   try {
   const { emailId, password } = req.body;
     const isUserExist = await User.find({ emailId: emailId });
-    console.log("isUserExist", isUserExist);
+    // console.log("isUserExist", isUserExist);
     if (!isUserExist) {
       throw new Error("Inavlid credentials!");
     }
     const isValidPassword = await bcrypt.compare(password, isUserExist?.[0]?.password);
 
     if (isValidPassword) {
+      // res.cookie("jwoefwjefijwijefiwjefiwjfeio");
+      const token = jwt.sign({_id : user.userId},"krishn@52365");
+      console.log
+      res.cookie('token', token)
       res.send("Login successfully!");
     } else {
       throw new Error("Inavlid credentials");
@@ -28,6 +36,33 @@ app.post("/login", async (req, res, next) => {
     res.status(400).send("Error saving user:" + err.message);
   }
 });
+
+app.get("/getuser", async (req, res) => {
+  // const userId = req.query.userId;
+  const {token} = req.cookies;
+  
+  if(!token){
+    throw new Error("Inavlid tken")
+  }
+  
+  try {
+    console.log("cookies", token);
+    const decodeMessage = jwt.verify(token,"krishn@52365");
+    console.log("decodeMessage", decodeMessage);
+     
+    res.send("cookies send succesffully!");
+    // const users = await User.find({ _id: userId });
+    // const users = await User.findOne({ emailId: userEmail }); // incase two use with same emailid it will give you first one
+    // if (users.length > 0) {
+    //   res.status(200).send(users);
+    // } else {
+    //   res.status(400).send("User not found");
+    // }
+  } catch (error) {
+    res.status(404).send("User not found with this id");
+  }
+});
+
 
 //ADD NEW USER - POST /signup
 app.post("/signup", async (req, res, next) => {
@@ -70,20 +105,7 @@ app.get("/user", async (req, res) => {
   }
 });
 
-app.get("/getuser", async (req, res) => {
-  const userId = req.query.userId;
-  try {
-    const users = await User.find({ _id: userId });
-    // const users = await User.findOne({ emailId: userEmail }); // incase two use with same emailid it will give you first one
-    if (users.length > 0) {
-      res.status(200).send(users);
-    } else {
-      res.status(400).send("User not found");
-    }
-  } catch (error) {
-    res.status(404).send("User not found with this id");
-  }
-});
+
 
 //Feed API - GET /feed - get all use from database
 app.get("/feed", async (req, res) => {
