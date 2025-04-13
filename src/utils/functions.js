@@ -12,12 +12,14 @@ const genderVal = (value) => {
 
 const signupValidation = (req) => {
   const { firstName, lastName, emailId, password } = req.body;
-     debugger;
+  console.log(emailId)
   if (!firstName || !lastName) {
     throw new Error("Please Enter fristname & lastname");
   } else if(!validator.isEmail(emailId)) {
     throw new Error("Please Enter vaid email id.")
-  }else {
+  } else if(!validator.isStrongPassword(password)) {
+    throw new Error("Please Enter strong password")
+  } else {
     return req.body;
   }
 };

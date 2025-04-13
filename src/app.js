@@ -1,13 +1,14 @@
 require("./config/database");
+const connectDB = require("./config/database");
 const express = require("express");
 const app = express();
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
-const connectDB = require("./config/database");
+
 const User = require("./models/user");
+const { userAuth } = require("./middleware/auth");
 const { signupValidation } = require("./utils/functions");
-const user = require("./models/user");
 
 app.use(express.json());
 app.use(cookieParser());
@@ -16,18 +17,17 @@ app.use(cookieParser());
 app.post("/login", async (req, res, next) => {
   try {
   const { emailId, password } = req.body;
-    const isUserExist = await User.find({ emailId: emailId });
-    // console.log("isUserExist", isUserExist);
-    if (!isUserExist) {
+    const user = await User.findOne({ emailId: emailId });
+    // console.log("user", user);
+    if (!user) {
       throw new Error("Inavlid credentials!");
     }
-    const isValidPassword = await bcrypt.compare(password, isUserExist?.[0]?.password);
+    const isValidPassword = await user.validatePassword(password);
 
     if (isValidPassword) {
-      // res.cookie("jwoefwjefijwijefiwjefiwjfeio");
-      const token = jwt.sign({_id : user.userId},"krishn@52365");
-      console.log
-      res.cookie('token', token)
+      const token = user.getJWT();
+      console.log('token', token);
+      res.cookie('token', token);
       res.send("Login successfully!");
     } else {
       throw new Error("Inavlid credentials");
@@ -37,43 +37,27 @@ app.post("/login", async (req, res, next) => {
   }
 });
 
-app.get("/getuser", async (req, res) => {
-  // const userId = req.query.userId;
-  const {token} = req.cookies;
-  
-  if(!token){
-    throw new Error("Inavlid tken")
-  }
-  
+app.get("/profile", userAuth, async (req, res) => {
   try {
-    console.log("cookies", token);
-    const decodeMessage = jwt.verify(token,"krishn@52365");
-    console.log("decodeMessage", decodeMessage);
-     
-    res.send("cookies send succesffully!");
-    // const users = await User.find({ _id: userId });
-    // const users = await User.findOne({ emailId: userEmail }); // incase two use with same emailid it will give you first one
-    // if (users.length > 0) {
-    //   res.status(200).send(users);
-    // } else {
-    //   res.status(400).send("User not found");
-    // }
-  } catch (error) {
-    res.status(404).send("User not found with this id");
+    const user = req.body.user;
+    // console.log("this user need profile", user);
+    res.send(user);
+  } catch (err) {
+    res.status(400).send("ERROR : " + err.message);
   }
 });
 
 
 //ADD NEW USER - POST /signup
 app.post("/signup", async (req, res, next) => {
-  // in most monggos functio is retun promise so we add async/await
+  // in most monggos function is retun promise so we add async/await
   try {
     const isUserExist = await User.find({ emailId: req.body.emailId });
     if (isUserExist.length === 0) {
       const sanitizeBody = signupValidation(req);
       const { firstName, lastName, emailId, password } = sanitizeBody;
       const passwordhash = await bcrypt.hash(password, 10);
-      console.log(passwordhash);
+      console.log("passwordhash", passwordhash);
       const user = await new User({
         firstName,
         lastName,
@@ -108,7 +92,7 @@ app.get("/user", async (req, res) => {
 
 
 //Feed API - GET /feed - get all use from database
-app.get("/feed", async (req, res) => {
+app.get("/feed", userAuth, async (req, res) => {
   try {
     const allUsers = await User.find({});
     // res.status(200).send(allUsers);
@@ -126,11 +110,9 @@ app.get("/feed", async (req, res) => {
 //DELETe SPI - DELETE /deleteuser
 app.delete("/deleteuser", async (req, res) => {
   const userId = req.query.userId;
-  console.log("userId", userId);
 
   try {
     const isValidUserID = await User.find({ _id: userId });
-    console.log(isValidUserID);
     if (isValidUserID.length > 0) {
       const userdelete = await User.findByIdAndDelete({ _id: userId });
       // const userdelete = await User.findByIdAndDelete(userId);
@@ -163,12 +145,32 @@ app.patch("/update", async (req, res) => {
       returnDocument: "after",
       runValidators: true, // apply validation on while update the data
     });
-    console.log(updateUser);
+    // console.log(updateUser);
     res.send("User update successfully!");
   } catch (error) {
     res.status(500).send("something went wrong!" + error);
   }
 });
+
+app.post("/sendConnectionRequest", userAuth, async (req, res) => {
+  try{
+  const user = req.user;
+  console.log("sending request uer by ",user)
+  // Sending a connection request
+  console.log("Sending a connection request");
+  res.send(`${user.firstName} sending connection request`)
+
+    // const users = await User.find({ emailId: userEmail });
+    // if (users.length === 0) {
+    //   res.status(404).send("User not found");
+    // } else {
+    //   res.send(users);
+    // }
+  } catch (err) {
+    res.status(400).send("Something not  went wrong ");
+  }
+});
+
 
 connectDB()
   .then(() => {
