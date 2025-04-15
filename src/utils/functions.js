@@ -24,4 +24,14 @@ const signupValidation = (req) => {
   }
 };
 
-module.exports = {genderVal, signupValidation};
+const validateEditProfilebody = (req) => {
+ 
+  const allowedFields = ["firstName","lastName", "age", "skills", "photoUrl", "gender", "about"];
+
+  const isvalidreq = Object.keys(req.body).every(field => allowedFields.includes(field));
+
+  return isvalidreq;
+
+}
+
+module.exports = {genderVal, signupValidation, validateEditProfilebody};

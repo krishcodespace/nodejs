@@ -13,66 +13,14 @@ const { signupValidation } = require("./utils/functions");
 app.use(express.json());
 app.use(cookieParser());
 
-//Login Api - POST/LOGIN
-app.post("/login", async (req, res, next) => {
-  try {
-  const { emailId, password } = req.body;
-    const user = await User.findOne({ emailId: emailId });
-    // console.log("user", user);
-    if (!user) {
-      throw new Error("Inavlid credentials!");
-    }
-    const isValidPassword = await user.validatePassword(password);
+const authRouter = require('./routes/auth');
+const profileRouter = require('./routes/profile');
+const requestRouter = require('./routes/request');
 
-    if (isValidPassword) {
-      const token = user.getJWT();
-      console.log('token', token);
-      res.cookie('token', token);
-      res.send("Login successfully!");
-    } else {
-      throw new Error("Inavlid credentials");
-    }
-  } catch (err) {
-    res.status(400).send("Error saving user:" + err.message);
-  }
-});
+app.use('/', authRouter);
+app.use('/', profileRouter);
+app.use('/', requestRouter);
 
-app.get("/profile", userAuth, async (req, res) => {
-  try {
-    const user = req.body.user;
-    // console.log("this user need profile", user);
-    res.send(user);
-  } catch (err) {
-    res.status(400).send("ERROR : " + err.message);
-  }
-});
-
-
-//ADD NEW USER - POST /signup
-app.post("/signup", async (req, res, next) => {
-  // in most monggos function is retun promise so we add async/await
-  try {
-    const isUserExist = await User.find({ emailId: req.body.emailId });
-    if (isUserExist.length === 0) {
-      const sanitizeBody = signupValidation(req);
-      const { firstName, lastName, emailId, password } = sanitizeBody;
-      const passwordhash = await bcrypt.hash(password, 10);
-      console.log("passwordhash", passwordhash);
-      const user = await new User({
-        firstName,
-        lastName,
-        emailId,
-        password: passwordhash,
-      });
-      await user.save();
-      res.send("User Added successfully!");
-    } else {
-      res.status(200).send("User Already exist with these email id!");
-    }
-  } catch (err) {
-    res.status(400).send("Error saving user:" + err.message);
-  }
-});
 
 app.get("/user", async (req, res) => {
   const userEmail = req.body.emailId;
@@ -89,23 +37,6 @@ app.get("/user", async (req, res) => {
   }
 });
 
-
-
-//Feed API - GET /feed - get all use from database
-app.get("/feed", userAuth, async (req, res) => {
-  try {
-    const allUsers = await User.find({});
-    // res.status(200).send(allUsers);
-    res.send({
-      data: allUsers,
-      status: 200,
-      message: "you got users!",
-      errorMessage: null,
-    });
-  } catch (error) {
-    res.status(404).send("Something went wrong");
-  }
-});
 
 //DELETe SPI - DELETE /deleteuser
 app.delete("/deleteuser", async (req, res) => {
@@ -149,25 +80,6 @@ app.patch("/update", async (req, res) => {
     res.send("User update successfully!");
   } catch (error) {
     res.status(500).send("something went wrong!" + error);
-  }
-});
-
-app.post("/sendConnectionRequest", userAuth, async (req, res) => {
-  try{
-  const user = req.user;
-  console.log("sending request uer by ",user)
-  // Sending a connection request
-  console.log("Sending a connection request");
-  res.send(`${user.firstName} sending connection request`)
-
-    // const users = await User.find({ emailId: userEmail });
-    // if (users.length === 0) {
-    //   res.status(404).send("User not found");
-    // } else {
-    //   res.send(users);
-    // }
-  } catch (err) {
-    res.status(400).send("Something not  went wrong ");
   }
 });
 
