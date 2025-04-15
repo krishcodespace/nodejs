@@ -3,7 +3,7 @@ const profileRouter = express.Router();
 const { userAuth } = require("../middleware/auth");
 const User = require('../models/user');
 
-const { validateEditProfilebody } = require("../utils/functions");
+const { validateEditProfilebody, validateFogotPwdBody } = require("../utils/functions");
 
 
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
@@ -27,7 +27,28 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
     
     await loggedInUser.save();
 
-    res.send("profile update successfully!");
+    // res.send("profile update successfully!");
+    res.json({message:`${loggedInUser.firstName}, your profile is updated sucessfully!`, data: loggedInUser})
+  } catch (err) {
+    res.status(400).send("ERROR : " + err.message);
+  }
+});
+
+profileRouter.patch("/forgotpwd", userAuth, async (req, res) => {
+  try {
+  
+    const loggedInUser = req.user;
+   const { isvalidreq, passwordhash} = await validateFogotPwdBody(req);
+   console.log('isvalidreq', isvalidreq, passwordhash);
+
+
+   loggedInUser.password = passwordhash;
+
+    await loggedInUser.save();
+
+    // res.send("profile update successfully!");
+    res.json({message:`${loggedInUser.firstName}, your password is updated sucessfully!`});
+
   } catch (err) {
     res.status(400).send("ERROR : " + err.message);
   }

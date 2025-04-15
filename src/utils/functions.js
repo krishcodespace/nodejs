@@ -1,5 +1,7 @@
-
+const bcrypt = require('bcrypt');
 const validator = require('validator');
+const User = require('../models/user');
+
 
 const genderVal = (value) => {
     console.log("gender validation functon run succes fully")
@@ -25,13 +27,40 @@ const signupValidation = (req) => {
 };
 
 const validateEditProfilebody = (req) => {
- 
+
   const allowedFields = ["firstName","lastName", "age", "skills", "photoUrl", "gender", "about"];
+  const isvalidreq = Object.keys(req.body).every(field => allowedFields.includes(field));
+  return isvalidreq;
+
+};
+
+const validateFogotPwdBody = async (req) => {
+const user = req.user;
+  const allowedFields = ["oldpassword", "newpassword"];
 
   const isvalidreq = Object.keys(req.body).every(field => allowedFields.includes(field));
 
-  return isvalidreq;
+  if(!isvalidreq){
+    throw new Error('invalid body')
+  }
+  const isValidexistpwd = await user.validatePassword(req.body.oldpassword);
+  console.log('isValidexistpwd', isValidexistpwd);
 
-}
+  if(!isValidexistpwd) {
+    throw new Error('please enter your  current password correct!')
+  }
+  
+ let passwordhash;
 
-module.exports = {genderVal, signupValidation, validateEditProfilebody};
+  if(!validator.isStrongPassword(req.body.newpassword)) {
+    throw new Error("Please make your new password stronger!");
+  }else{ 
+     passwordhash = await bcrypt.hash(req.body.newpassword, 10);
+  }
+console.log('isvalidreq', isvalidreq)
+  return {isvalidreq , passwordhash};
+
+};
+
+
+module.exports = { genderVal, signupValidation, validateFogotPwdBody };
