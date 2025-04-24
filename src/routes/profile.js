@@ -36,26 +36,20 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
 
 profileRouter.patch("/forgotpwd", userAuth, async (req, res) => {
   try {
-  
-    const loggedInUser = req.user;
+   const loggedInUser = req.user;
    const { isvalidreq, passwordhash} = await validateFogotPwdBody(req);
-   console.log('isvalidreq', isvalidreq, passwordhash);
-
 
    loggedInUser.password = passwordhash;
-
     await loggedInUser.save();
 
-    // res.send("profile update successfully!");
     res.json({message:`${loggedInUser.firstName}, your password is updated sucessfully!`});
-
   } catch (err) {
     res.status(400).send("ERROR : " + err.message);
   }
 });
 
 //Feed API - GET /feed - get all use from database
-profileRouter.get("/feed", userAuth, async (req, res) => {
+profileRouter.get("/feed", async (req, res) => {
   try {
     const allUsers = await User.find({});
     // res.status(200).send(allUsers);

@@ -8,16 +8,16 @@ const jwt = require("jsonwebtoken");
      if (!token) {
        throw new Error("Token is not valid!!!!!!!!!");
      }
- 
+
      const decodedObj = jwt.verify(token, "krishn@52365");
-      console.log("decodeObj",decodedObj);
+      // console.log("decodeObj",decodedObj);
      const { _id } = decodedObj;
  
      const user = await User.findById(_id);
+    //  console.log("user", user);
      if (!user) {
        throw new Error("User not found");
      }
-
      req.user = user;
      next();
    } catch (err) {

@@ -1,17 +1,68 @@
 const express = require("express");
 const { userAuth } = require("../middleware/auth");
+const ConnectionRequest = require("../models/connectionRequest");
+const User = require('../models/user')
 
 const requestRouter = express.Router();
 
-requestRouter.post("/sendConnectionRequest", userAuth, async (req, res) => {
+requestRouter.post("/request/send/:status/:toUserId", userAuth,
+  async (req, res) => {
+    try {
+      const fromUserId = req.user._id;
+      const toUserId = req.params.toUserId;
+      const status = req.params.status;
+
+      const validStatus = ["ignored", "interested"];
+      const isvalidstatus = validStatus.includes(status);
+      if (!isvalidstatus) {
+       return  res.status(400).json({ message: "Invalid status type: " + status });
+      }
+
+      const toUser = await User.findById(toUserId);
+      if (!toUser) {
+        return res.status(404).json({ message: "User not found!" });
+      }
+
+      const existingConnectionRequest = await ConnectionRequest.findOne({
+        $or: [
+          { fromUserId, toUserId },
+          { fromUserId: toUserId, toUserId: fromUserId },
+        ],
+      });
+      if (existingConnectionRequest) {
+        return res.status(400).send({ message: "Connection Request Already Exists!!" });
+      }
+
+      // Sending a connection request
+      const connectionRequest = new ConnectionRequest({
+        fromUserId,
+        toUserId,
+        status,
+      });
+      const data = await connectionRequest.save();
+   
+      res.json({
+        message:
+          req.user.firstName + " is " + status + " in " + toUser.firstName,
+        data,
+      });
+      // res.send(`${user.firstName} sending connection request`);
+    } catch (err) {
+      res.status(400).send("Faild to sent request:" + err);
+    }
+  }
+);
+
+requestRouter.get("/getallrequest", userAuth, async (req, res) => {
   try {
-    const user = req.user;
-    console.log("sending request uer by ", user);
-    // Sending a connection request
-    console.log("Sending a connection request");
-    res.send(`${user.firstName} sending connection request`);
+    const allUsers = await ConnectionRequest.find({});
+    res.json({
+      message: "all request get succesfully!",
+      allUsers,
+    });
+    // res.send(`${user.firstName} sending connection request`);
   } catch (err) {
-    res.status(400).send("Something not  went wrong ");
+    res.status(400).send("Faild to sent request:" + err);
   }
 });
 

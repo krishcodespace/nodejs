@@ -44,7 +44,7 @@ const user = req.user;
     throw new Error('invalid body')
   }
   const isValidexistpwd = await user.validatePassword(req.body.oldpassword);
-  console.log('isValidexistpwd', isValidexistpwd);
+  // console.log('isValidexistpwd', isValidexistpwd);
 
   if(!isValidexistpwd) {
     throw new Error('please enter your  current password correct!')
@@ -57,7 +57,7 @@ const user = req.user;
   }else{ 
      passwordhash = await bcrypt.hash(req.body.newpassword, 10);
   }
-console.log('isvalidreq', isvalidreq)
+// console.log('isvalidreq', isvalidreq)
   return {isvalidreq , passwordhash};
 
 };
