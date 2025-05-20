@@ -16,8 +16,8 @@
  - POST /request/send/:status/:userId 
  
  ## userRouter
- - GET /user/connections
  - GET /user/requests
+ - GET /user/connections
  - GET /user/feed - Gets you the profiles of other users on platform
  
  

@@ -173,3 +173,6 @@ Add API level validation on Patch request & Signup post api
   - ALWAYS THINK ABOUT CORNER CASES 
 
   - write code with proper validation for POST request/review/accepted/67fb8667342484b89d3f6167
+  - Thought process - POST vs GET
+  - read about ref and populate 
+  - Create GET - /user/request/recevied

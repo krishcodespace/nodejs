@@ -41,6 +41,7 @@ requestRouter.post("/request/send/:status/:toUserId", userAuth,
         toUserId,
         status,
         // requestInfo
+        
       });
       const data = await connectionRequest.save();
    
