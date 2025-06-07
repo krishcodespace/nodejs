@@ -176,3 +176,8 @@ Add API level validation on Patch request & Signup post api
   - Thought process - POST vs GET
   - read about ref and populate 
   - Create GET - /user/request/recevied
+  - Logic for GET /feed API
+  - Explore the $nin , $and, $ne and other query operatorators
+
+  - Pagination
+  
